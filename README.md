@@ -1,51 +1,79 @@
 # WinCalendar
 
-Windows 11 日历，使用 C# / .NET 8 / WinUI 3。保留 Visual Studio 单项目 MSIX 结构。
-
-## 运行
-
-在 Visual Studio 中打开 `WinCalendar.slnx`，选择 **x64 / Debug / WinCalendar (Package)**，构建并运行。普通启动打开设置，关闭设置后继续后台运行。重复启动会打开已有实例的设置。
-
-本地非打包运行也可使用以下命令：
-
-```powershell
-dotnet build WinCalendar.csproj -p:Platform=x64 -p:WindowsPackageType=None -p:GenerateAppxPackageOnBuild=false -p:AppxPackageSigningEnabled=false -p:OutputPath=bin/LocalRun/
-.\bin\LocalRun\WinCalendar.exe
-```
-
-需要 .NET 8 Desktop Runtime 和项目所用版本的 Windows App Runtime（当前依赖 Windows App SDK 2.5.1）。MSIX 部署由 Visual Studio 管理。UI Automation 使用 Windows Desktop 框架程序集；所有应用页面均为 WinUI 3。
+WinCalendar 是一款面向 Windows 11 的桌面日历。它在任务栏时钟旁提供日历入口，也可以显示为可移动的桌面组件，方便查看公历、农历、节气、节假日和补班信息。
 
 ## 功能
 
-- 点击任务栏时钟弹出日历，支持各显示器的时钟区域和不同 DPI；再次点击、失焦或按 Esc 收起。右键菜单包含设置与退出。
-- 月视图展示公历、农历、节气和休班标记；滚轮或上下箭头翻月，点击年月逐级选择月份和年份。`Home` 返回今天，`PageUp / PageDown` 翻页。
-- 主界面采用参考项目的紧凑布局：40×40日期格、绿色休假角标、红色补班角标和浅灰底部信息区。窗口按实际内容测量高度，没有整页滚动条或重复边框；可用屏幕空间不足时整体等比缩小。
-- 底部展示所选日期节假日、宜忌及以今天为基准的假期倒计时。假期内显示“正在休假”。翻月保留选中日期，重新打开浮窗选中今天。
-- 桌面日历可用顶部拖动柄移动，保存位置；桌面窗口不随失焦隐藏。
-- 设置包含深色、浅色、跟随系统主题，透明度，开机启动，桌面组件、任务栏替换和日历内容开关。
-- 自定义时钟支持时间、日期格式和即时预览，使用原时钟区域上的覆盖窗口，不修改系统时间或全局区域格式。长格式受原时钟区域宽度限制。
-- 托盘图标左键打开日历、右键打开菜单；即使关闭任务栏替换也可操作。
+- 点击任务栏右下角的时间区域即可打开紧凑日历。
+- 月视图同时显示公历日期、农历、节气和节日。
+- 休假日期显示绿色“休”标记，补班日期显示红色“班”标记。
+- 底部信息区可显示节假日、黄历宜忌和下一个假期倒计时。
+- 支持深色、浅色和跟随系统主题，也可调节日历背景透明度。
+- 可启用桌面组件。拖动顶部可调整位置，使用中间的图钉按钮锁定或解除拖动。
+- 可自定义 Windows 任务栏时钟的时间和日期格式；关闭功能或退出程序后会恢复系统格式。
+- 托盘图标提供“设置”和“退出”菜单，关闭设置窗口后程序仍会在后台运行。
 
-## ICS 数据
+## 安装
 
-默认源：[China Calendar 2026](https://chinacalendar.app/ics/china-calendar-2026.ics)。可在“日历内容”设置中修改为其他 HTTP/HTTPS ICS 地址。
+1. 从项目的 Release 页面下载 `WinCalendar-Installer.exe`。
+2. 双击安装程序，按提示完成安装。
+3. 安装结束后勾选“启动 WinCalendar”，或从开始菜单启动它。
 
-- `休｜名称` / `休|名称`：休假；`班｜名称` / `班|名称`：补班。未带前缀的事件仅显示名称。
-- 支持全天、多天事件，以及 Ical.Net 支持的重复规则、例外日期、折行和转义。结束日期按 ICS 的排除规则处理；同日冲突时补班优先。
-- 启动时及每6小时更新，提供手动刷新。各地址分别缓存，下载或解析失败保留原数据。内置2026年快照供首次离线启动使用。
-- 农历、节气、宜忌独立离线计算，未收录年份不推测放假与补班安排。默认 URL 是固定年份，需要在后续年份更换。
-- 配置、缓存和错误日志位于 `%LOCALAPPDATA%\WinCalendar`。日志文件为 `app.log`。
+首次启动会打开设置窗口。若系统提示缺少运行环境，请安装 [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) 和 [Windows App Runtime](https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads)。
 
-## 实现位置
+## 使用日历
 
-- `Views/CalendarView.cs`、`Views/CalendarStyles.xaml`：日历、年月选择及按钮样式；`MainWindow.xaml.cs`：浮窗和桌面窗口。
-- `Views/SettingsWindow.cs`、`Views/ContextMenuWindow.cs`：设置与菜单。
-- `Services/HolidayService.cs`、`CalendarService.cs`：ICS、农历及宜忌。
-- `Services/TaskbarService.cs`、`ClockOverlayService.cs`：时钟检测、点击钩子及自定义时钟。
-- `Services/AppController.cs`：窗口生命周期、更新定时器和退出清理。
+点击任务栏右下角的时间或日期区域即可打开日历。再次点击、按 `Esc` 或点击其他位置时，日历会自动收起。
 
-任务栏检测使用 UI Automation，在独立后台任务中枚举主、副任务栏；鼠标钩子只读取缓存并派发点击。Explorer 重启后自动重新检测。Windows 任务栏内部控件结构随系统版本可能变化，检测状态可在通用设置查看。
+在日历中可以：
 
-农历依赖 [lunar-csharp](https://github.com/6tail/lunar-csharp)，ICS 解析依赖 [Ical.Net](https://github.com/ical-org/ical.net)，均按上游 MIT 许可使用。默认ICS数据快照来自需求中提供的 China Calendar 文件。
+- 使用顶部箭头切换月份。
+- 点击年月切换到选月、选年视图。
+- 点击某一天，查看当天的节日、宜忌和倒计时信息。
+- 使用鼠标滚轮翻月。
 
-按项目要求未添加测试项目或测试代码。
+当“替换任务栏日历”关闭时，仍可通过托盘图标右键菜单打开设置或退出程序。
+
+## 桌面组件
+
+在“通用设置”中打开“桌面组件”，日历会固定显示在桌面上。
+
+组件默认可以拖动：在顶部空白区域按住鼠标左键并移动即可调整位置。点击顶部居中的图钉可以锁定组件；锁定后不会响应拖动。位置和锁定状态会自动保存。
+
+## 日历内容与数据源
+
+在“日历内容”中可以控制底部信息区、节假日、宜忌和倒计时是否显示，也可以调整主日历背景透明度。
+
+节假日和补班信息来自 ICS 数据源，默认使用 China Calendar 2026。程序识别以下事件标题：
+
+- `休｜节日名称`：标记为休假。
+- `班｜补班名称`：标记为补班。
+
+可在设置中替换为自己的 HTTP 或 HTTPS ICS 地址。点击“保存”后会立即更新，之后程序会在启动时和每隔 6 小时自动更新。网络不可用时会继续使用已保存的数据。
+
+农历、节气和宜忌在本地计算，不依赖网络。默认 ICS 地址按年份提供数据，跨年后请在设置中更新为对应年份的数据源。
+
+## 自定义任务栏时钟
+
+在“任务栏时钟”中打开“自定义任务栏时钟”，填写时间格式和日期格式后点击“应用格式”。下方预览会展示当前格式的效果。
+
+常用格式：
+
+- 时间：`HH:mm`、`HH:mm:ss`
+- 日期：`yyyy/MM/dd`、`MM-dd ddd`
+
+格式中的 `HH` 为 24 小时制，`mm` 为分钟，`ss` 为秒；`yyyy`、`MM`、`dd` 分别为年、月、日，`ddd` 和 `dddd` 分别为星期简称和完整名称。
+
+## 开机启动与退出
+
+“开机自启动”可让 WinCalendar 在登录 Windows 后自动运行。关闭设置窗口不会结束程序，它会继续保留在托盘区。
+
+需要彻底退出时，请右键托盘图标选择“退出”，或在设置窗口左下角选择“退出”。退出后，自定义任务栏时钟会恢复为系统原有显示格式。
+
+## 数据与隐私
+
+应用设置、ICS 缓存和错误日志保存在 `%LOCALAPPDATA%\WinCalendar`。除用户配置的 ICS 地址外，程序不会上传个人日历或其他数据。
+
+## 反馈
+
+欢迎通过 [Issues](https://github.com/SpaceMiao/WinCalendar/issues) 提交问题和建议。提交问题时请说明 Windows 版本、操作步骤和出现的现象。
