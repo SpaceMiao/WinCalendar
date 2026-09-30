@@ -2,6 +2,10 @@
 
 WinCalendar 是一款面向 Windows 11 的桌面日历。它在任务栏时钟旁提供日历入口，也可以显示为可移动的桌面组件，方便查看公历、农历、节气、节假日和补班信息。
 
+<img width="360" height="532" alt="image" src="https://github.com/user-attachments/assets/1135383b-7de1-4c57-9612-19430d0df870" />
+
+<img width="804" height="668" alt="image" src="https://github.com/user-attachments/assets/14ef3eec-fbb4-4266-8b1d-5a1acd8b2c11" />
+
 ## 功能
 
 - 点击任务栏右下角的时间区域即可打开紧凑日历。
