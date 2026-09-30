@@ -1,0 +1,10 @@
+.vs/
+.codegraph/
+bin/
+obj/
+*.user
+*.suo
+AppPackages/
+TestResults/
+*.log
+*.pdb
