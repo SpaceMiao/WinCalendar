@@ -38,6 +38,7 @@ public sealed partial class MainWindow : Window
     private Native.Point _anchor;
     private Native.Rect _clockBounds;
     private Native.Point _desktopDragOrigin;
+    private Native.Point _desktopDragCursorOrigin;
     private bool _closing;
     private bool _resizeQueued;
     internal nint Handle { get; }
@@ -59,13 +60,14 @@ public sealed partial class MainWindow : Window
         _calendar.DragStarted += () =>
         {
             _desktopDragOrigin = new Native.Point(AppWindow.Position.X, AppWindow.Position.Y);
+            Native.GetCursorPos(out _desktopDragCursorOrigin);
         };
-        _calendar.DragMoved += delta =>
+        _calendar.DragMoved += () =>
         {
-            var scale = Native.GetDpiForWindow(Handle) / 96.0;
+            Native.GetCursorPos(out var cursor);
             Native.SetWindowPos(Handle, 0,
-                _desktopDragOrigin.X + (int)Math.Round(delta.X * scale),
-                _desktopDragOrigin.Y + (int)Math.Round(delta.Y * scale),
+                _desktopDragOrigin.X + cursor.X - _desktopDragCursorOrigin.X,
+                _desktopDragOrigin.Y + cursor.Y - _desktopDragCursorOrigin.Y,
                 0, 0, 0x1 | 0x4 | 0x10);
         };
         _calendar.DragCompleted += () =>

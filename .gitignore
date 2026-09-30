@@ -5,6 +5,7 @@ obj/
 *.user
 *.suo
 AppPackages/
+InstallerOutput/
 TestResults/
 *.log
 *.pdb

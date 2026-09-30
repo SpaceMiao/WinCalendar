@@ -6,6 +6,7 @@ public sealed class AppSettings
     public string Theme { get; set; } = "system";
     public bool Autostart { get; set; }
     public bool DesktopWidget { get; set; }
+    public bool DesktopPinned { get; set; }
     public bool ReplaceTaskbar { get; set; } = true;
     public int Transparency { get; set; } = 15;
     public bool ShowFooter { get; set; } = true;

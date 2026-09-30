@@ -21,7 +21,7 @@ internal sealed class SettingsWindow : Window
     private readonly HolidayService _holidays;
     private readonly Func<string> _taskbarStatus;
     private readonly Action _exit;
-    private readonly Grid _root = new();
+    private readonly Grid _root = new() { IsTabStop = true };
     private readonly Border _navigationSurface = new();
     private readonly Border _contentSurface = new();
     private readonly StackPanel _navigationItems = new() { Spacing = 4, Margin = new Thickness(8, 12, 8, 12) };
@@ -92,7 +92,14 @@ internal sealed class SettingsWindow : Window
         Closed += (_, _) => { if (_windowIcon != 0) Native.DestroyIcon(_windowIcon); };
     }
 
-    internal void ShowSettings() { ApplyTheme(); UpdateStatus(); _timer.Start(); Activate(); }
+    internal void ShowSettings()
+    {
+        ApplyTheme();
+        UpdateStatus();
+        _timer.Start();
+        Activate();
+        FocusRoot();
+    }
     internal void Shutdown() { _timer.Stop(); Close(); }
 
     private void HideMaximizeButton()
@@ -201,7 +208,10 @@ internal sealed class SettingsWindow : Window
         else ClockPage();
         ApplyTheme();
         UpdateStatus();
+        FocusRoot();
     }
+
+    private void FocusRoot() => DispatcherQueue.TryEnqueue(() => _root.Focus(FocusState.Programmatic));
 
     private void GeneralPage()
     {

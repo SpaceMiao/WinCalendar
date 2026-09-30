@@ -32,12 +32,14 @@ public sealed class CalendarView : UserControl
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(30) };
     public event Action? DismissRequested;
     public event Action? DragStarted;
-    public event Action<Windows.Foundation.Point>? DragMoved;
+    public event Action? DragMoved;
     public event Action? DragCompleted;
     public event Action? ContentSizeChanged;
     private uint _dragPointerId;
-    private Windows.Foundation.Point _dragStart;
     private bool _dragging;
+    private Grid? _desktopDragHandle;
+    private Button? _desktopPinButton;
+    private SymbolIcon? _desktopPinIcon;
 
     public CalendarView(SettingsStore settings, HolidayService holidays, bool desktop = false)
     {
@@ -62,13 +64,31 @@ public sealed class CalendarView : UserControl
         Add(nav, today, 1); Add(nav, previous, 2); Add(nav, next, 3);
         if (desktop)
         {
-            var handle = new Button { Style = _buttonStyle, Content = "⠿", Height = 20, HorizontalAlignment = HorizontalAlignment.Center, Padding = new Thickness(20, 0, 20, 0), IsTabStop = false };
-            handle.PointerPressed += StartDesktopDrag;
-            handle.PointerMoved += MoveDesktopDrag;
-            handle.PointerReleased += EndDesktopDrag;
-            handle.PointerCanceled += EndDesktopDrag;
-            handle.PointerCaptureLost += EndDesktopDrag;
-            _layout.Children.Add(handle);
+            _desktopDragHandle = new Grid { Height = 20, Background = new SolidColorBrush(Colors.Transparent) };
+            _desktopDragHandle.PointerPressed += StartDesktopDrag;
+            _desktopDragHandle.PointerMoved += MoveDesktopDrag;
+            _desktopDragHandle.PointerReleased += EndDesktopDrag;
+            _desktopDragHandle.PointerCanceled += EndDesktopDrag;
+            _desktopDragHandle.PointerCaptureLost += EndDesktopDrag;
+            _desktopPinIcon = new SymbolIcon { Symbol = Symbol.Pin, Foreground = Brush("#202020") };
+            _desktopPinButton = new Button
+            {
+                Style = _buttonStyle,
+                Width = 20,
+                Height = 20,
+                IsTabStop = false,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Content = new Viewbox { Width = 12, Height = 12, Child = _desktopPinIcon },
+            };
+            _desktopPinButton.Click += (_, _) =>
+            {
+                _settings.Value.DesktopPinned = !_settings.Value.DesktopPinned;
+                UpdateDesktopPinState();
+                try { _settings.Save(); } catch (Exception ex) { SettingsStore.Log(ex); }
+            };
+            _desktopDragHandle.Children.Add(_desktopPinButton);
+            _layout.Children.Add(_desktopDragHandle);
+            UpdateDesktopPinState();
         }
         _layout.Children.Add(nav);
         _layout.Children.Add(_grid);
@@ -289,20 +309,28 @@ public sealed class CalendarView : UserControl
 
     private void StartDesktopDrag(object sender, PointerRoutedEventArgs e)
     {
+        if (_settings.Value.DesktopPinned) { e.Handled = true; return; }
         var element = (UIElement)sender;
         if (!element.CapturePointer(e.Pointer)) return;
         _dragging = true;
         _dragPointerId = e.Pointer.PointerId;
-        _dragStart = e.GetCurrentPoint(this).Position;
         DragStarted?.Invoke();
         e.Handled = true;
+    }
+
+    private void UpdateDesktopPinState()
+    {
+        if (_desktopDragHandle is null || _desktopPinButton is null || _desktopPinIcon is null) return;
+        var pinned = _settings.Value.DesktopPinned;
+        _desktopPinIcon.Symbol = pinned ? Symbol.UnPin : Symbol.Pin;
+        AutomationProperties.SetName(_desktopPinButton, pinned ? "解除钉住桌面组件" : "钉住桌面组件");
+        ToolTipService.SetToolTip(_desktopPinButton, pinned ? "解除钉住" : "钉住桌面组件");
     }
 
     private void MoveDesktopDrag(object sender, PointerRoutedEventArgs e)
     {
         if (!_dragging || e.Pointer.PointerId != _dragPointerId) return;
-        var position = e.GetCurrentPoint(this).Position;
-        DragMoved?.Invoke(new Windows.Foundation.Point(position.X - _dragStart.X, position.Y - _dragStart.Y));
+        DragMoved?.Invoke();
         e.Handled = true;
     }
 
